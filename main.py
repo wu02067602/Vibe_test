@@ -5,6 +5,7 @@
 """
 
 import sys
+import math
 from calculator import Calculator
 
 def display_menu():
@@ -16,6 +17,7 @@ def display_menu():
     print("2. 減法 (-)")
     print("3. 乘法 (×)")
     print("4. 除法 (÷)")
+    print("7. 微分 d/dx [輸入函數表達式]")
     print("5. 查看運算歷史")
     print("6. 清除歷史")
     print("0. 離開")
@@ -38,6 +40,22 @@ def get_operation():
             return operations[choice]
         print("請輸入 1-4 之間的數字！")
 
+def build_function_from_expr(expr: str):
+    """從使用者輸入的表達式建立函數 f(x)
+
+    支援 math 模組中的函數，例如: sin, cos, exp, log 等。
+    範例輸入: x**2 + 3*x + 1,  sin(x) + x
+    """
+    # 準備允許使用的名稱
+    allowed_names = {name: getattr(math, name) for name in dir(math) if not name.startswith('_')}
+
+    def func(x):
+        local_names = dict(allowed_names)
+        local_names['x'] = x
+        return eval(expr, {"__builtins__": {}}, local_names)
+
+    return func
+
 def main():
     """主程式"""
     calc = Calculator()
@@ -46,7 +64,7 @@ def main():
     
     while True:
         display_menu()
-        choice = input("請選擇功能 (0-6): ").strip()
+        choice = input("請選擇功能 (0-7): ").strip()
         
         if choice == '0':
             print("感謝使用計算機，再見！")
@@ -64,6 +82,30 @@ def main():
             # 清除歷史
             calc.clear_history()
             print("運算歷史已清除")
+        elif choice == '7':
+            # 微分功能
+            try:
+                print("\n請輸入函數表達式，變數名稱為 x，例如: x**2 + 3*x + 1 或 sin(x)")
+                expr = input("f(x) = ").strip()
+                if not expr:
+                    print("表達式不可為空！")
+                    continue
+
+                x = get_number("請輸入評估點 x: ")
+
+                method_input = input("選擇數值方法 [1] 五點中央(預設)  [2] 中央差分: ").strip()
+                method = 'five_point' if method_input in ['', '1'] else 'central'
+
+                h_input = input("步長 h (預設 1e-5，直接 Enter 採預設): ").strip()
+                h = 1e-5 if h_input == '' else float(h_input)
+
+                f = build_function_from_expr(expr)
+                result = calc.derivative(f, x, h=h, method=method, label=expr)
+                print(f"\n結果: f'(x) 在 x={x} 的近似值為 {result}")
+            except ValueError as e:
+                print(f"錯誤: {e}")
+            except Exception as e:
+                print(f"錯誤: 無法解析或計算該表達式 ({e})")
         elif choice in ['1', '2', '3', '4']:
             # 執行運算
             try:
