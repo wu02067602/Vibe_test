@@ -18,6 +18,7 @@ def display_menu():
     print("3. 乘法 (×)")
     print("4. 除法 (÷)")
     print("7. 微分 d/dx [輸入函數表達式]")
+    print("8. 積分 ∫ [輸入函數表達式]")
     print("5. 查看運算歷史")
     print("6. 清除歷史")
     print("0. 離開")
@@ -64,7 +65,7 @@ def main():
     
     while True:
         display_menu()
-        choice = input("請選擇功能 (0-7): ").strip()
+        choice = input("請選擇功能 (0-8): ").strip()
         
         if choice == '0':
             print("感謝使用計算機，再見！")
@@ -102,6 +103,38 @@ def main():
                 f = build_function_from_expr(expr)
                 result = calc.derivative(f, x, h=h, method=method, label=expr)
                 print(f"\n結果: f'(x) 在 x={x} 的近似值為 {result}")
+            except ValueError as e:
+                print(f"錯誤: {e}")
+            except Exception as e:
+                print(f"錯誤: 無法解析或計算該表達式 ({e})")
+        elif choice == '8':
+            # 積分功能
+            try:
+                print("\n請輸入函數表達式，變數名稱為 x，例如: x**2 + 3*x + 1 或 sin(x)")
+                expr = input("f(x) = ").strip()
+                if not expr:
+                    print("表達式不可為空！")
+                    continue
+
+                a = get_number("請輸入積分下限 a: ")
+                b = get_number("請輸入積分上限 b: ")
+                
+                if a >= b:
+                    print("錯誤: 積分上限必須大於下限！")
+                    continue
+
+                method_input = input("選擇數值方法 [1] Simpson法則(預設)  [2] 梯形法則: ").strip()
+                method = 'simpson' if method_input in ['', '1'] else 'trapezoidal'
+
+                n_input = input("分割數量 n (預設 1000，直接 Enter 採預設): ").strip()
+                n = 1000 if n_input == '' else int(n_input)
+                if n <= 0:
+                    print("分割數量必須為正整數！")
+                    continue
+
+                f = build_function_from_expr(expr)
+                result = calc.integrate(f, a, b, n=n, method=method, label=expr)
+                print(f"\n結果: ∫ f(x) dx 從 {a} 到 {b} 的近似值為 {result}")
             except ValueError as e:
                 print(f"錯誤: {e}")
             except Exception as e:

@@ -98,3 +98,65 @@ class Calculator:
         label_text = label if label else "f(x)"
         self.history.append(f"微分: d/dx [{label_text}] | x={x} ≈ {result}")
         return result
+
+    def integrate(self, func: Callable[[float], float], a: float, b: float, 
+                  n: int = 1000, method: str = 'simpson', 
+                  label: Optional[str] = None) -> float:
+        """數值積分
+        
+        使用數值方法估計函數在區間 [a, b] 的定積分。
+        
+        參數:
+            func: 可呼叫物件，輸入浮點數 x，回傳 f(x)
+            a: 積分下限
+            b: 積分上限
+            n: 分割數量，必須為偶數（Simpson 法則需要），預設 1000
+            method: 使用的方法，'trapezoidal' 或 'simpson'，預設 'simpson'
+            label: 歷史紀錄中用來描述函數的標籤（例如表達式字串）
+            
+        回傳:
+            在區間 [a, b] 的積分近似值
+        """
+        if a >= b:
+            raise ValueError("積分上限必須大於下限")
+        if n <= 0:
+            raise ValueError("分割數量必須為正整數")
+        if method == 'simpson' and n % 2 != 0:
+            n += 1  # Simpson 法則需要偶數個分割
+            
+        try:
+            h = (b - a) / n
+            
+            if method == 'trapezoidal':
+                # 梯形法則
+                result = 0.5 * (func(a) + func(b))
+                for i in range(1, n):
+                    x = a + i * h
+                    result += func(x)
+                result *= h
+                
+            elif method == 'simpson':
+                # Simpson 法則（1/3 法則）
+                result = func(a) + func(b)
+                
+                # 奇數項係數為 4
+                for i in range(1, n, 2):
+                    x = a + i * h
+                    result += 4 * func(x)
+                
+                # 偶數項係數為 2
+                for i in range(2, n, 2):
+                    x = a + i * h
+                    result += 2 * func(x)
+                
+                result *= h / 3
+                
+            else:
+                raise ValueError("不支援的數值積分方法")
+                
+        except Exception as exc:
+            raise ValueError(f"函數評估失敗: {exc}") from exc
+        
+        label_text = label if label else "f(x)"
+        self.history.append(f"積分: ∫ [{label_text}] dx 從 {a} 到 {b} ≈ {result}")
+        return result

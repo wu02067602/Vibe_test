@@ -99,6 +99,61 @@ class TestCalculator(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.calc.derivative(lambda x: x, 0.0, h=0)
 
+    def test_integrate_simpson(self):
+        """測試 Simpson 法則積分"""
+        # f(x) = x^2 從 0 到 3 的積分 = x^3/3 |_0^3 = 9
+        f1 = lambda x: x**2
+        result1 = self.calc.integrate(f1, 0, 3, method='simpson')
+        self.assertAlmostEqual(result1, 9.0, places=5)
+        
+        # f(x) = sin(x) 從 0 到 π 的積分 = -cos(x) |_0^π = 2
+        f2 = math.sin
+        result2 = self.calc.integrate(f2, 0, math.pi, method='simpson')
+        self.assertAlmostEqual(result2, 2.0, places=5)
+        
+        # f(x) = 2x + 1 從 1 到 3 的積分 = x^2 + x |_1^3 = (9+3) - (1+1) = 10
+        f3 = lambda x: 2*x + 1
+        result3 = self.calc.integrate(f3, 1, 3, method='simpson')
+        self.assertAlmostEqual(result3, 10.0, places=5)
+
+    def test_integrate_trapezoidal(self):
+        """測試梯形法則積分"""
+        # f(x) = x^2 從 0 到 2 的積分 = x^3/3 |_0^2 = 8/3 ≈ 2.667
+        f = lambda x: x**2
+        result = self.calc.integrate(f, 0, 2, method='trapezoidal', n=1000)
+        expected = 8.0 / 3.0
+        self.assertAlmostEqual(result, expected, places=3)
+
+    def test_integrate_invalid_bounds(self):
+        """測試無效的積分區間"""
+        f = lambda x: x
+        with self.assertRaises(ValueError):
+            self.calc.integrate(f, 3, 1)  # a >= b
+        with self.assertRaises(ValueError):
+            self.calc.integrate(f, 1, 1)  # a == b
+
+    def test_integrate_invalid_n(self):
+        """測試無效的分割數量"""
+        f = lambda x: x
+        with self.assertRaises(ValueError):
+            self.calc.integrate(f, 0, 1, n=0)  # n <= 0
+        with self.assertRaises(ValueError):
+            self.calc.integrate(f, 0, 1, n=-5)  # n < 0
+
+    def test_integrate_invalid_method(self):
+        """測試不支援的積分方法"""
+        f = lambda x: x
+        with self.assertRaises(ValueError):
+            self.calc.integrate(f, 0, 1, method='unknown')
+
+    def test_integrate_history(self):
+        """測試積分歷史記錄"""
+        f = lambda x: x**2
+        self.calc.integrate(f, 0, 2, label='x**2')
+        history = self.calc.get_history()
+        self.assertEqual(len(history), 1)
+        self.assertIn("積分: ∫ [x**2] dx 從 0 到 2", history[0])
+
 if __name__ == '__main__':
     print("執行計算機測試...")
     unittest.main(verbosity=2)
