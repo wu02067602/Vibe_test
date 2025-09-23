@@ -6,6 +6,7 @@
 
 import unittest
 from calculator import Calculator
+import math
 
 class TestCalculator(unittest.TestCase):
     """計算機測試類別"""
@@ -69,6 +70,34 @@ class TestCalculator(unittest.TestCase):
         
         self.calc.clear_history()
         self.assertEqual(len(self.calc.get_history()), 0)
+
+    def test_derivative_central_and_five_point(self):
+        """測試微分（中央差分與五點中央）"""
+        # f(x) = x^2 -> f'(x) = 2x
+        f = lambda x: x * x
+        x0 = 1.234
+        expected = 2 * x0
+        d_central = self.calc.derivative(f, x0, h=1e-5, method='central')
+        d_five = self.calc.derivative(f, x0, h=1e-5, method='five_point')
+        self.assertAlmostEqual(d_central, expected, places=6)
+        self.assertAlmostEqual(d_five, expected, places=6)
+
+        # f(x) = sin(x) -> f'(x) = cos(x)
+        g = math.sin
+        x1 = 0.7
+        expected_g = math.cos(x1)
+        d_g = self.calc.derivative(g, x1, h=1e-5, method='five_point')
+        self.assertAlmostEqual(d_g, expected_g, places=6)
+
+    def test_derivative_invalid_method(self):
+        """測試不支援的微分方法"""
+        with self.assertRaises(ValueError):
+            self.calc.derivative(lambda x: x, 0.0, method='unknown')
+
+    def test_derivative_invalid_h(self):
+        """測試無效步長"""
+        with self.assertRaises(ValueError):
+            self.calc.derivative(lambda x: x, 0.0, h=0)
 
 if __name__ == '__main__':
     print("執行計算機測試...")
